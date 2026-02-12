@@ -1,0 +1,14 @@
+{
+  "version": "0.2.1",
+  "configurations": [
+    {
+      "type": "cppgdb",
+      "name": "Debug cFS",
+      "debuggerConfiguration": "gdb",
+      "program": "./core-cpu1",
+      "cwd": "~/.vs/cFS/bin/cpu1",
+      "project": "CMakeLists.txt",
+      "projectTarget": "mission-install"
+    }
+  ]
+}
