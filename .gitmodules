@@ -30,3 +30,9 @@
 	path = libs/cryptolib
 	url = https://github.com/ateleris/CryptoLib.git
     branch = dev
+[submodule "tools/tblCRCTool"]
+	path = tools/tblCRCTool
+	url = https://github.com/nasa/tblCRCTool.git
+[submodule "tools/elf2cfetbl"]
+	path = tools/elf2cfetbl
+	url = https://github.com/nasa/elf2cfetbl.git

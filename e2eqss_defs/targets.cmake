@@ -86,7 +86,7 @@ SET(SPACECRAFT_ID 0x42)
 # and must be loaded explicitly via startup script or command.
 # This list is effectively appended to every TGTx_APPLIST in targets.cmake.
 # Example:
-list(APPEND MISSION_GLOBAL_APPLIST cryptolib pqclean_cfs_wrapper libossl_cfs_wrapper cf sample_app sample_lib skeleton_app apqs_app)
+list(APPEND MISSION_GLOBAL_APPLIST cryptolib pqclean_cfs_wrapper libossl_cfs_wrapper cf apqs_app)
 
 # The "MISSION_GLOBAL_STATIC_APPLIST" is similar to MISSION_GLOBAL_APPLIST
 # but the apps are statically linked.
@@ -102,7 +102,7 @@ list(APPEND MISSION_GLOBAL_APPLIST cryptolib pqclean_cfs_wrapper libossl_cfs_wra
 SET(MISSION_CPUNAMES cpu1)
 
 SET(cpu1_PROCESSORID 1)
-SET(cpu1_APPLIST ci_lab to_lab sch_lab)
+SET(cpu1_APPLIST ci_lab to_lab)
 SET(cpu1_FILELIST cfe_es_startup.scr)
 SET(cpu1_SYSTEM i686-linux-gnu)
 
