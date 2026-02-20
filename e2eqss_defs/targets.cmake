@@ -102,7 +102,7 @@ list(APPEND MISSION_GLOBAL_APPLIST cryptolib pqclean_cfs_wrapper libossl_cfs_wra
 SET(MISSION_CPUNAMES cpu1)
 
 SET(cpu1_PROCESSORID 1)
-SET(cpu1_APPLIST ci_lab to_lab)
+SET(cpu1_APPLIST ci_lab to_lab sch_lab)
 SET(cpu1_FILELIST cfe_es_startup.scr)
 SET(cpu1_SYSTEM i686-linux-gnu)
 

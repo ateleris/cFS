@@ -36,3 +36,6 @@
 [submodule "tools/elf2cfetbl"]
 	path = tools/elf2cfetbl
 	url = https://github.com/nasa/elf2cfetbl.git
+[submodule "apps/sch_lab"]
+	path = apps/sch_lab
+	url = https://github.com/ateleris/sch_lab.git
