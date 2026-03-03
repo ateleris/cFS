@@ -1,0 +1,32 @@
+# Build artifacts
+build/
+out/
+
+# Visual Studio directories
+.vs/
+
+# VS Code directories
+.vscode/
+
+# Git
+.git/
+.gitmodules
+.gitignore
+
+# Documentation (not needed in container)
+*.md
+README
+
+# IDE and editor files
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Python cache (if any)
+__pycache__/
+*.pyc
+
+# Temporary files
+*.tmp
+*.bak
