@@ -30,3 +30,6 @@ __pycache__/
 # Temporary files
 *.tmp
 *.bak
+
+# Runtime key material (mounted at runtime, never baked into image)
+apps/apqs_app/keys/

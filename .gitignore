@@ -3,3 +3,4 @@ build
 /sample_defs
 .DS_Store
 .vs
+apps/apqs_app/keys/
