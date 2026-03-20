@@ -38,5 +38,5 @@
 	branch = e2eqss
 [submodule "apps/cf"]
 	path = apps/cf
-	url = git@github.com:ateleris/CF.git
+	url = https://github.com/ateleris/CF.git
 	branch = e2eqss
