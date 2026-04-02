@@ -92,7 +92,7 @@ RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/00-usr-local.conf && ldconfig
 ENV LD_LIBRARY_PATH=/usr/local/lib
 
 # Create CF (CFDP) filestore directories for file transfer
-RUN mkdir -p /cf/cf_tmp /cf/cf_fail
+RUN mkdir -p /cf/cf_tmp /cf/cf_fail /cf/upload
 
 # Copy built cFS artifacts from builder stage
 # The CMake install goes to /workspace/cFS/bin/cpu1 based on CMAKE_INSTALL_PREFIX
