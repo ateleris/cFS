@@ -28,3 +28,9 @@ else()
   message (STATUS "OMIT_DEPRECATED=false: Deprecated elements included in build")
   set(MISSION_RESOURCEID_MODE "SIMPLE") # less type safe, but more backward compatible
 endif (OMIT_DEPRECATED)
+
+# Enable the 16-bit CCSDS Packet Error Control (PEC) field on the CFDP space
+# packets exchanged with the ground MCS (CRC-16-CCITT per ECSS-E-ST-70-41C
+# B.1.6).  This reserves 2 trailing bytes per CFDP PDU and makes the CF app
+# append/verify the CRC.  Set to 0 to disable (e.g. for peers without a PEC).
+add_definitions(-DCF_SPACEPACKET_PEC=1)

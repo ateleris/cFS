@@ -1,13 +1,14 @@
 include(FetchContent)
 
-# Try to use system OpenSSL first
-find_package(OpenSSL)
+# Exactly 3.6.1 — must match the Dockerfile's source-built OpenSSL; older
+# system versions (e.g. 3.0.x) lack the ML-DSA/ML-KEM support the PKI needs.
+find_package(OpenSSL 3.6.1 EXACT)
 
 if(NOT OpenSSL_FOUND)
   FetchContent_Declare(
     openssl_cmake
     GIT_REPOSITORY	https://github.com/jimmy-park/openssl-cmake.git
-    GIT_TAG			3.6.0
+    GIT_TAG			3.6.1
   )
   FetchContent_MakeAvailable(openssl_cmake)
 endif()
