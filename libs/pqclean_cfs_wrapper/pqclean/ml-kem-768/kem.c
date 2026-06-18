@@ -7,6 +7,12 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+
+#ifdef ESA_PERF_MEASUREMENT
+#include <stdio.h>
+#include <time.h>
+#endif
+
 /*************************************************
 * Name:        PQCLEAN_MLKEM768_CLEAN_crypto_kem_keypair_derand
 *
@@ -107,14 +113,41 @@ int PQCLEAN_MLKEM768_CLEAN_crypto_kem_enc_derand(uint8_t *ct,
 *
 * Returns 0 (success)
 **************************************************/
-int PQCLEAN_MLKEM768_CLEAN_crypto_kem_enc(uint8_t *ct,
-        uint8_t *ss,
-        const uint8_t *pk) {
+#ifdef ESA_PERF_MEASUREMENT
+static int PQCLEAN_MLKEM768_CLEAN_crypto_kem_enc_impl(uint8_t *ct, 
+    uint8_t *ss, 
+    const uint8_t *pk)
+#else
+int PQCLEAN_MLKEM768_CLEAN_crypto_kem_enc(uint8_t *ct, 
+    uint8_t *ss, 
+    const uint8_t *pk)
+#endif
+{
     uint8_t coins[KYBER_SYMBYTES];
     randombytes(coins, KYBER_SYMBYTES);
     PQCLEAN_MLKEM768_CLEAN_crypto_kem_enc_derand(ct, ss, pk, coins);
     return 0;
 }
+
+#ifdef ESA_PERF_MEASUREMENT
+int PQCLEAN_MLKEM768_CLEAN_crypto_kem_enc(uint8_t *ct, 
+    uint8_t *ss, 
+    const uint8_t *pk)
+{
+    struct timespec start, end;
+
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    int ret = PQCLEAN_MLKEM768_CLEAN_crypto_kem_enc_impl(ct, ss, pk);
+    clock_gettime(CLOCK_MONOTONIC, &end);
+
+    long elapsed_ns = (end.tv_sec - start.tv_sec) * 1000000000L + (end.tv_nsec - start.tv_nsec);
+
+    printf("PQCLEAN_MLKEM768_CLEAN_crypto_kem_enc took %ld ns (%.3f us)\n", elapsed_ns, elapsed_ns / 1000.0);
+
+    return ret;
+}
+#endif
+
 
 /*************************************************
 * Name:        PQCLEAN_MLKEM768_CLEAN_crypto_kem_dec
@@ -133,9 +166,17 @@ int PQCLEAN_MLKEM768_CLEAN_crypto_kem_enc(uint8_t *ct,
 *
 * On failure, ss will contain a pseudo-random value.
 **************************************************/
+
+#ifdef ESA_PERF_MEASUREMENT
+static int PQCLEAN_MLKEM768_CLEAN_crypto_kem_dec_impl(uint8_t *ss,
+    const uint8_t *ct,
+    const uint8_t *sk)
+#else
 int PQCLEAN_MLKEM768_CLEAN_crypto_kem_dec(uint8_t *ss,
         const uint8_t *ct,
-        const uint8_t *sk) {
+        const uint8_t *sk) 
+#endif
+{
     int fail;
     uint8_t buf[2 * KYBER_SYMBYTES];
     /* Will contain key, coins */
@@ -162,3 +203,22 @@ int PQCLEAN_MLKEM768_CLEAN_crypto_kem_dec(uint8_t *ss,
 
     return 0;
 }
+
+#ifdef ESA_PERF_MEASUREMENT
+int PQCLEAN_MLKEM768_CLEAN_crypto_kem_dec(uint8_t *ss, 
+    const uint8_t *ct, 
+    const uint8_t *sk)
+{
+    struct timespec start, end;
+    
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    int ret = PQCLEAN_MLKEM768_CLEAN_crypto_kem_dec_impl(ss, ct, sk);
+    clock_gettime(CLOCK_MONOTONIC, &end);
+
+    long elapsed_ns = (end.tv_sec - start.tv_sec) * 1000000000L + (end.tv_nsec - start.tv_nsec);
+
+    printf("PQCLEAN_MLKEM768_CLEAN_crypto_kem_dec took %ld ns (%.3f us)\n", elapsed_ns, elapsed_ns / 1000.0);
+
+    return ret;
+}
+#endif

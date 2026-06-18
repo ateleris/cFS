@@ -40,6 +40,11 @@ target_include_directories(pqclean_lib PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/pqclean/common
 )
 
+option(ESA_PERF_MEASUREMENT "Enable performance measurement in PQClean kem" ON)
+if(ESA_PERF_MEASUREMENT)
+    target_compile_definitions(pqclean_lib PRIVATE ESA_PERF_MEASUREMENT)
+endif()
+
 # Public headers
 target_sources(pqclean_lib
     PUBLIC pqclean_fwd.h
