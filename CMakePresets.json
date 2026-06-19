@@ -20,18 +20,38 @@
         "CC": "gcc",
         "CXX": "g++"
       }
+    },
+    {
+      "name": "linux-gcc-debug-board",
+      "displayName": "Linux GCC Debug (FPGA board, local OpenSSL)",
+      "description": "Non-Docker build on the FPGA board against a hand-built OpenSSL 3.6.1 in /usr/local. OPENSSL_ROOT_DIR is set in the environment (not just as a cache var) so it propagates to the nested cFS arch sub-build.",
+      "inherits": "linux-gcc-debug",
+      "cacheVariables": {
+        "OPENSSL_USE_STATIC_LIBS": "TRUE"
+      },
+      "environment": {
+        "OPENSSL_ROOT_DIR": "/usr/local"
+      }
     }
   ],
   "buildPresets": [
     {
       "name": "linux-gcc-debug",
       "configurePreset": "linux-gcc-debug"
+    },
+    {
+      "name": "linux-gcc-debug-board",
+      "configurePreset": "linux-gcc-debug-board"
     }
   ],
   "testPresets": [
     {
       "name": "linux-gcc-debug",
       "configurePreset": "linux-gcc-debug"
+    },
+    {
+      "name": "linux-gcc-debug-board",
+      "configurePreset": "linux-gcc-debug-board"
     }
   ]
 }
