@@ -41,6 +41,8 @@ typedef struct
 static const E2EQSS_SdlsGvcid_t E2EQSS_SDLS_GVCIDS[] = {
     {0xFF, 0xFFFF, 0xFF}, /* sentinel - not a real GVCID */
     /* { tfvn, scid, vcid },  <-- add SDLS-protected channels here */
+    {0, 0x0003, 0}, /* TFVN 0, SCID 3, VCID 0 — SDLS-protected channel (TC decrypt + TM protect) */
+    {0, 0x0003, 2},
 };
 
 /** Return true if the given GVCID carries an SDLS security header. */
