@@ -32,6 +32,16 @@
       "environment": {
         "OPENSSL_ROOT_DIR": "/usr/local"
       }
+    },
+    {
+      "name": "linux-gcc-debug-tests",
+      "displayName": "Linux GCC Debug (unit tests + coverage)",
+      "description": "Same as linux-gcc-debug but with ENABLE_UNIT_TESTS=true so the UT-Assert coverage testrunners (e.g. apps/apqs_app/unit-test) are built. Run the tests with ctest (test preset of the same name).",
+      "inherits": "linux-gcc-debug",
+      "binaryDir": "${sourceDir}/build/linux-gcc-debug-tests",
+      "cacheVariables": {
+        "ENABLE_UNIT_TESTS": "true"
+      }
     }
   ],
   "buildPresets": [
@@ -42,6 +52,10 @@
     {
       "name": "linux-gcc-debug-board",
       "configurePreset": "linux-gcc-debug-board"
+    },
+    {
+      "name": "linux-gcc-debug-tests",
+      "configurePreset": "linux-gcc-debug-tests"
     }
   ],
   "testPresets": [
@@ -52,6 +66,13 @@
     {
       "name": "linux-gcc-debug-board",
       "configurePreset": "linux-gcc-debug-board"
+    },
+    {
+      "name": "linux-gcc-debug-tests",
+      "configurePreset": "linux-gcc-debug-tests",
+      "output": {
+        "outputOnFailure": true
+      }
     }
   ]
 }
