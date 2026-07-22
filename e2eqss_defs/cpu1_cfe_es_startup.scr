@@ -1,5 +1,5 @@
 CFE_LIB, cfe_assert,	CFE_Assert_LibInit, ASSERT_LIB,		0,  0,		0x0, 0;
-CFE_LIB, cryptolib,		Crypto_SC_Init,		CRYPTO,			0,	0,		0x0, 0;
+CFE_LIB, apqs_lib,		lib_apqs_init,		APQS_LIB,		0,	0,		0x0, 0;
 CFE_LIB, pqclean_lib,   lib_pqclean_init,   PQCLEAN_LIB,    0,  0,      0x0, 0;
 CFE_LIB, ossl_lib,      lib_openssl_init,   OSSL_LIB,       0,  0,      0x0, 0;
 CFE_APP, cf,			CF_AppMain,			CF, 		    50, 16384,	0x0, 0;

@@ -6,48 +6,19 @@ enable_testing()
 message("call cfe config")
 add_subdirectory(cfe)
 
-# Set path to standalone CryptoLib source
-set(CRYPTOLIB_ROOT_DIR ${CMAKE_SOURCE_DIR}/libs/cryptolib)
-# Set a build directory for standalone CryptoLib
-set(CRYPTOLIB_TEST_BUILD_DIR ${CMAKE_BINARY_DIR}/cryptolib_build)
-# Path to the external test binary, produced by your custom build target
-set(CRYPTOLIB_TEST_EXE "${CRYPTOLIB_TEST_BUILD_DIR}/bin")
-
-file(MAKE_DIRECTORY ${CRYPTOLIB_TEST_BUILD_DIR})
-
-# Custom target to configure and build CryptoLib in standalone mode with tests
-add_custom_target(build_cryptolib_tests
-    COMMAND ${CMAKE_COMMAND} -S ${CRYPTOLIB_ROOT_DIR} -B ${CRYPTOLIB_TEST_BUILD_DIR} -DTEST=ON
-    COMMAND ${CMAKE_COMMAND} --build ${CRYPTOLIB_TEST_BUILD_DIR} --target all
-    WORKING_DIRECTORY ${CRYPTOLIB_TEST_BUILD_DIR}
-    COMMENT "Building CryptoLib tests in standalone mode"
-)
-
-# Custom target to run the tests after building --> only if run as target instead of the test explorer
-add_custom_target(run_cryptolib_tests
-    COMMAND ${CMAKE_CTEST_COMMAND} --test-dir ${CRYPTOLIB_TEST_BUILD_DIR}
-    DEPENDS build_cryptolib_tests
-    COMMENT "Running CryptoLib unit tests via CTest"
-)
+# Standalone CryptoLib test build + CTest registration. Lives next to the
+# embedded CryptoLib in apqs_lib, but must be included here so its targets
+# and tests are registered in the root project (visible to VS / ctest).
+include(${CMAKE_SOURCE_DIR}/libs/apqs_lib/cryptolib_tests.cmake)
 
 # ---------------------------------------------------------------------------
 # Register unit-test binaries with CTest so they appear in `ctest` and IDE Test
-# Explorers. Only relevant in a unit-test build. Both sets register binaries
-# that live outside this (mission) build tree - the CryptoLib standalone build
-# and the nested cFS per-arch build - which is why they are re-registered here
-# rather than discovered automatically.
+# Explorers. Only relevant in a unit-test build. These register binaries that
+# live outside this (mission) build tree - the nested cFS per-arch build -
+# which is why they are re-registered here rather than discovered
+# automatically.
 # ---------------------------------------------------------------------------
 if (ENABLE_UNIT_TESTS)
-
-    # CryptoLib standalone tests (built via the build_cryptolib_tests target).
-    set(CRYPTOLIB_TEST_BINARIES
-        ut_aes_gcm_siv ut_aos_apply ut_aos_process ut_crypto ut_crypto_config
-        ut_ep_key_mgmt ut_ep_mc ut_ep_sa_mgmt ut_sa_save
-        ut_tc_apply ut_tc_process ut_tm_apply ut_tm_process
-    )
-    foreach(test_bin ${CRYPTOLIB_TEST_BINARIES})
-        add_test(NAME ${test_bin} COMMAND "${CRYPTOLIB_TEST_EXE}/${test_bin}")
-    endforeach()
 
     # apqs_app UT-Assert coverage testrunners. add_cfe_coverage_test() already
     # registers these, but in the nested per-arch build (native/<cpu>), a tree
