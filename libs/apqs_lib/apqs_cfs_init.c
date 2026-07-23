@@ -14,7 +14,7 @@ int32 lib_apqs_init(void)
 
     OS_printf("APQS Lib v%s\n", ver);
 
-    CI_LAB_CryptoLib_Init();
+    apqs_lib_init();
 
     return CFE_SUCCESS;
 }

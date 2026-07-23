@@ -1,15 +1,10 @@
-#include "apsq_api.h"
+#include "apqs_api.h"
 
 #include <assert.h>
 #include <string.h>
+
 #include "crypto.h"
 #include "crypto_error.h"
-#include "sa_interface.h"
-
-const char *apqs_lib_version()
-{
-    return "1.0"; // TODO get the correct version according to latest review
-}
 
 
 // CRYPTOLIB HELPERS FROM CI_LAB
@@ -17,7 +12,7 @@ static void CI_LAB_Crypto_ClearSAs(void)
 {
     SecurityAssociation_t *sa = NULL;
 
-    for (uint16 spi = 0; spi < NUM_SA; spi++)
+    for (uint16_t spi = 0; spi < NUM_SA; spi++)
     {
         sa_if->sa_get_from_spi(spi, &sa);
         if (sa != NULL)
@@ -101,6 +96,104 @@ static void CI_LAB_CryptoLib_Init(void)
     CI_LAB_Crypto_ClearSAs();
     CI_LAB_Crypto_PopulateSAs();
 
-    CFE_EVS_SendEvent(CI_LAB_INIT_INF_EID, CFE_EVS_EventType_INFORMATION, "CI Lab Crypto Lib Initialized.");
+    // needs CFS header - TODO custom logger
+    //CFE_EVS_SendEvent(CI_LAB_INIT_INF_EID, CFE_EVS_EventType_INFORMATION, "CI Lab Crypto Lib Initialized.");
 }
 
+/* Header Impl */
+const char* apqs_lib_version(void)
+{
+    return "1.0"; // TODO get the correct version according to latest review
+}
+
+int32_t apqs_lib_init(void) 
+{
+    int32_t initRetVal = Crypto_SC_Init();
+    CI_LAB_CryptoLib_Init();
+
+    return initRetVal;
+}
+
+/* REROUTE OF CRYPTOLIB CALLS */
+
+// SHARED HELPER
+GvcidManagedParameters_t* apqs_get_gvcid_managed_parameters_array(void)
+{
+    return gvcid_managed_parameters_array;
+}
+
+int apqs_get_gvcid_counter(void)
+{
+    return gvcid_counter;
+}
+
+// CI_LAB
+int32_t apqs_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid, uint8_t frame_type,
+    GvcidManagedParameters_t* managed_parameters_in,
+    GvcidManagedParameters_t* managed_parameters_out)
+{
+    return Crypto_Get_Managed_Parameters_For_Gvcid(tfvn, scid, vcid, frame_type, managed_parameters_in, managed_parameters_out);
+}
+
+int32_t apqs_Get_Sdls_Ep_Reply(uint8_t* buffer, uint16_t* length)
+{
+    return Crypto_Get_Sdls_Ep_Reply(buffer, length);
+}
+
+int32_t apqs_TC_ProcessSecurity(uint8_t* ingest, int* len_ingest, TC_t* tc_sdls_processed_frame) 
+{
+    return Crypto_TC_ProcessSecurity(ingest, len_ingest, tc_sdls_processed_frame);
+}
+
+int32_t apqs_Process_Clear_TC_EP(uint8_t *frame, int len)
+{
+    return Crypto_Process_Clear_TC_EP(frame, len);
+}
+
+typedef struct
+{
+    uint8_t  tfvn;
+    uint16_t scid;
+    uint8_t  vcid;
+} E2EQSS_SdlsGvcid_t;
+
+static const E2EQSS_SdlsGvcid_t E2EQSS_SDLS_GVCIDS[] = {
+    {0xFF, 0xFFFF, 0xFF}, // sentinel - not a real GVCID
+    {0, 0x0003, 2},       // tfvn, scid, vcid
+};
+
+bool E2EQSS_Gvcid_Has_Sdls(uint8_t tfvn, uint16_t scid, uint8_t vcid)
+{
+    size_t n = sizeof(E2EQSS_SDLS_GVCIDS) / sizeof(E2EQSS_SDLS_GVCIDS[0]);
+    for (size_t i = 0; i < n; i++)
+    {
+        if (E2EQSS_SDLS_GVCIDS[i].tfvn == tfvn && E2EQSS_SDLS_GVCIDS[i].scid == scid &&
+            E2EQSS_SDLS_GVCIDS[i].vcid == vcid)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+// TO_LAB
+uint16_t apqs_Calc_FECF(const uint8_t* ingest, int len_ingest) 
+{
+    return Crypto_Calc_FECF(ingest, len_ingest);
+}
+
+int32_t apqs_TM_ApplySecurity(uint8_t* pTfBuffer, uint16_t len_ingest)
+{
+    return Crypto_TM_ApplySecurity(pTfBuffer, len_ingest);
+}
+
+SaInterfaceStruct* apqs_get_sa_if(void)
+{
+    return sa_if;
+}
+
+// APQS App
+KeyInterface apqs_get_key_interface_internal(void)
+{
+    return get_key_interface_internal();
+}

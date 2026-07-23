@@ -6,3 +6,7 @@
  */
 #include "../cryptolib/include/crypto_structs.h"
 #include "../cryptolib/include/crypto_config_structs.h"
+#include "../cryptolib/include/sa_interface.h"
+#include "../cryptolib/include/key_interface.h"
+
+
