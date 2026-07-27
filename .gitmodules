@@ -39,4 +39,4 @@
 [submodule "libs/apqs_lib/cryptolib"]
 	path = libs/apqs_lib/cryptolib
 	url = https://github.com/ateleris/CryptoLib.git
-	branch = dev
+	branch = e2eqss
