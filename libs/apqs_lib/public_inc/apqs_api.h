@@ -45,5 +45,8 @@ SaInterface apqs_get_sa_if(void);
 // APQS
 KeyInterface apqs_get_key_interface_internal(void);
 
-// E2EQSS SDLS CFG
-bool E2EQSS_Gvcid_Has_Sdls(uint8_t tfvn, uint16_t scid, uint8_t vcid);
+// SDLS CFG
+// Per-link SDLS gates: the TC and TM VCID spaces are independent, so each
+// link checks its own list (CI_LAB -> TC, TO_LAB -> TM).
+bool TC_Gvcid_Has_Sdls(uint8_t tfvn, uint16_t scid, uint8_t vcid);
+bool TM_Gvcid_Has_Sdls(uint8_t tfvn, uint16_t scid, uint8_t vcid);

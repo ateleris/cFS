@@ -6,7 +6,6 @@
 #include "crypto.h"
 #include "crypto_error.h"
 
-
 // CRYPTOLIB HELPERS FROM CI_LAB
 static void CI_LAB_Crypto_ClearSAs(void)
 {
@@ -24,26 +23,154 @@ static void CI_LAB_Crypto_ClearSAs(void)
     }
 }
 
+static void CI_LAB_Crypto_PopulateGVCIDs(void)
+{
+    // with segment headers
+    TCGvcidManagedParameters_t tc_gvcid_params = {
+        0, // tfvn
+        3, // scid
+        0, // vcid
+        TC_HAS_FECF,
+        TC_HAS_SEGMENT_HDRS,
+        1024, // max frame size
+        1     // set flag
+    };
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(tc_gvcid_params);
+    tc_gvcid_params.vcid = 1;
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(tc_gvcid_params);
+    tc_gvcid_params.vcid = 2;
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(tc_gvcid_params);
+    tc_gvcid_params.vcid = 3;
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(tc_gvcid_params);
+
+    TMGvcidManagedParameters_t tm_gvcid_params = {
+        0, // tfvn
+        4, // scid
+        0, // vcid
+        TM_HAS_FECF,
+        1786, // max frame size
+        TM_HAS_OCF,
+        1 // set flag
+    };
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(tm_gvcid_params);
+    tm_gvcid_params.vcid = 1;
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(tm_gvcid_params);
+    tm_gvcid_params.vcid = 2;
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(tm_gvcid_params);
+    tm_gvcid_params.vcid = 3;
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(tm_gvcid_params);
+}
+
 static void CI_LAB_Crypto_PopulateSAs(void)
 {
     SecurityAssociation_t *sa = NULL;
+    // check crypto_structs.h for SecurityAssociation_t definition
 
-    // SA 0 - TC CLEAR MODE (Operational)
+    // TC SDLS EP
     sa_if->sa_get_from_spi(0, &sa);
     sa->spi             = 0;
     sa->sa_state        = SA_OPERATIONAL;
-    sa->est             = 0;
-    sa->ast             = 0;
-    sa->shivf_len       = 12;
-    sa->iv_len          = 12;
-    sa->shsnf_len       = 0;
-    sa->arsnw           = 5;
-    sa->arsnw_len       = 1;
-    sa->arsn_len        = 0;
+    sa->est             = 1;
+    sa->ekid            = 1;
+    sa->ast             = 1;
+    sa->akid            = 1;
     sa->gvcid_blk.tfvn  = 0;
-    sa->gvcid_blk.scid  = SCID & 0x3FF;
+    sa->gvcid_blk.scid  = 3;
     sa->gvcid_blk.vcid  = 0;
     sa->gvcid_blk.mapid = 0;
+    sa->shivf_len       = 12;
+    sa->shsnf_len       = 0;
+    sa->shplf_len       = 0;
+    sa->stmacf_len      = 16;
+    sa->ecs             = CRYPTO_CIPHER_AES256_GCM;
+    sa->ecs_len         = 1;
+    sa->iv_len          = 12;
+    sa->acs             = 0;
+    sa->acs_len         = 0;
+    sa->abm_len         = 20;
+    memset(sa->abm, 0xFF, sa->abm_len);
+    sa->arsn_len  = 0;
+    sa->arsnw_len = 1;
+    sa->arsnw     = 16;
+
+    // TC CLEAR MODE
+    sa_if->sa_get_from_spi(1, &sa);
+    sa->spi             = 1;
+    sa->sa_state        = SA_OPERATIONAL;
+    sa->est             = 0;
+    sa->ekid            = 0;
+    sa->ast             = 0;
+    sa->akid            = 0;
+    sa->gvcid_blk.tfvn  = 0;
+    sa->gvcid_blk.scid  = 3;
+    sa->gvcid_blk.vcid  = 1;
+    sa->gvcid_blk.mapid = 0;
+    sa->shivf_len       = 0;
+    sa->shsnf_len       = 0;
+    sa->shplf_len       = 0;
+    sa->stmacf_len      = 0;
+    sa->ecs             = 0;
+    sa->ecs_len         = 0;
+    sa->iv_len          = 0;
+    sa->acs             = 0;
+    sa->acs_len         = 0;
+    sa->abm_len         = 0;
+    sa->arsn_len        = 0;
+    sa->arsnw_len       = 0;
+    sa->arsnw           = 0;
+
+    // TM SDLS EP
+    sa_if->sa_get_from_spi(10, &sa);
+    sa->spi             = 10;
+    sa->sa_state        = SA_OPERATIONAL;
+    sa->est             = 1;
+    sa->ekid            = 2;
+    sa->ast             = 1;
+    sa->akid            = 2;
+    sa->gvcid_blk.tfvn  = 0;
+    sa->gvcid_blk.scid  = 4;
+    sa->gvcid_blk.vcid  = 0;
+    sa->gvcid_blk.mapid = 0;
+    sa->shivf_len       = 12;
+    sa->shsnf_len       = 0;
+    sa->shplf_len       = 0;
+    sa->stmacf_len      = 16;
+    sa->ecs             = CRYPTO_CIPHER_AES256_GCM;
+    sa->ecs_len         = 1;
+    sa->iv_len          = 12;
+    sa->acs             = 0;
+    sa->acs_len         = 0;
+    sa->abm_len         = 20;
+    memset(sa->abm, 0xFF, sa->abm_len);
+    sa->arsn_len  = 0;
+    sa->arsnw_len = 1;
+    sa->arsnw     = 16;
+
+    // TM CLEAR MODE
+    sa_if->sa_get_from_spi(11, &sa);
+    sa->spi             = 11;
+    sa->sa_state        = SA_OPERATIONAL;
+    sa->est             = 0;
+    sa->ekid            = 0;
+    sa->ast             = 0;
+    sa->akid            = 0;
+    sa->gvcid_blk.tfvn  = 0;
+    sa->gvcid_blk.scid  = 4;
+    sa->gvcid_blk.vcid  = 1;
+    sa->gvcid_blk.mapid = 0;
+    sa->shivf_len       = 0;
+    sa->shsnf_len       = 0;
+    sa->shplf_len       = 0;
+    sa->stmacf_len      = 0;
+    sa->ecs             = 0;
+    sa->ecs_len         = 0;
+    sa->iv_len          = 0;
+    sa->acs             = 0;
+    sa->acs_len         = 0;
+    sa->abm_len         = 0;
+    sa->arsn_len        = 0;
+    sa->arsnw_len       = 0;
+    sa->arsnw           = 0;
 }
 
 static int32_t CI_LAB_CryptoLib_Init(void)
@@ -57,32 +184,9 @@ static int32_t CI_LAB_CryptoLib_Init(void)
     Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_TRUE, 0x3F,
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // with segment headers
-    TCGvcidManagedParameters_t seg_tc_params = {
-        0, // tfvn
-        3, // scid
-        0, // vcid
-        TC_HAS_FECF,
-        TC_HAS_SEGMENT_HDRS,
-        1024, // max frame size
-        1 // set flag
-    };
-    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(seg_tc_params);
-    seg_tc_params.vcid = 2;
-    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(seg_tc_params);
-
-    TMGvcidManagedParameters_t seg_tm_params = {
-        0, // tfvn
-        3, // scid
-        0, // vcid
-        TM_HAS_FECF,
-        1786, // max frame size
-        TM_HAS_OCF,
-        1 // set flag
-    };
-    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(seg_tm_params);
-    seg_tm_params.vcid = 2;
-    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(seg_tm_params);
+    // Must run before Crypto_Init: it rejects an empty managed-parameter table
+    // (CRYPTO_MANAGED_PARAM_CONFIGURATION_NOT_COMPLETE)
+    CI_LAB_Crypto_PopulateGVCIDs();
 
     int32_t status = Crypto_Init();
     assert(CRYPTO_LIB_SUCCESS == status);
@@ -170,25 +274,42 @@ typedef struct
     uint8_t  tfvn;
     uint16_t scid;
     uint8_t  vcid;
-} E2EQSS_SdlsGvcid_t;
+} SdlsGvcid_t;
 
-static const E2EQSS_SdlsGvcid_t E2EQSS_SDLS_GVCIDS[] = {
+static const SdlsGvcid_t SDLS_TC_GVCIDS[] = {
     {0xFF, 0xFFFF, 0xFF}, // sentinel - not a real GVCID
-    {0, 0x0003, 2},       // tfvn, scid, vcid
+    {0, 3, 0},            // SDLS EP commands (SPI 0)
+    {0, 3, 1},            // TC clear mode (SPI 1)
+    {0, 3, 2},            // TC post-handshake (SPI 2, EP-created)
 };
 
-bool E2EQSS_Gvcid_Has_Sdls(uint8_t tfvn, uint16_t scid, uint8_t vcid)
+static const SdlsGvcid_t SDLS_TM_GVCIDS[] = {
+    {0xFF, 0xFFFF, 0xFF}, // sentinel - not a real GVCID
+    {0, 4, 0},            // SDLS EP responses (SPI 10)
+    {0, 4, 1},            // TM clear mode (SPI 11)
+    {0, 4, 2},            // TM post-handshake (SPI 12, EP-created)
+};
+
+static bool Gvcid_In_List(const SdlsGvcid_t *list, size_t n, uint8_t tfvn, uint16_t scid, uint8_t vcid)
 {
-    size_t n = sizeof(E2EQSS_SDLS_GVCIDS) / sizeof(E2EQSS_SDLS_GVCIDS[0]);
     for (size_t i = 0; i < n; i++)
     {
-        if (E2EQSS_SDLS_GVCIDS[i].tfvn == tfvn && E2EQSS_SDLS_GVCIDS[i].scid == scid &&
-            E2EQSS_SDLS_GVCIDS[i].vcid == vcid)
+        if (list[i].tfvn == tfvn && list[i].scid == scid && list[i].vcid == vcid)
         {
             return true;
         }
     }
     return false;
+}
+
+bool TC_Gvcid_Has_Sdls(uint8_t tfvn, uint16_t scid, uint8_t vcid)
+{
+    return Gvcid_In_List(SDLS_TC_GVCIDS, sizeof(SDLS_TC_GVCIDS) / sizeof(SDLS_TC_GVCIDS[0]), tfvn, scid, vcid);
+}
+
+bool TM_Gvcid_Has_Sdls(uint8_t tfvn, uint16_t scid, uint8_t vcid)
+{
+    return Gvcid_In_List(SDLS_TM_GVCIDS, sizeof(SDLS_TM_GVCIDS) / sizeof(SDLS_TM_GVCIDS[0]), tfvn, scid, vcid);
 }
 
 // TO_LAB
