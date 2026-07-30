@@ -82,7 +82,7 @@ SET(SPACECRAFT_ID 0x42)
 #list(APPEND MISSION_CORE_MODULES mymodule)
 
 # add folder names where apps / libs are localted
-list(APPEND MISSION_GLOBAL_APPLIST apqs_lib pqclean_cfs_wrapper libossl_cfs_wrapper cf apqs_app)
+list(APPEND MISSION_GLOBAL_APPLIST libossl_cfs_wrapper pqclean_cfs_wrapper cf apqs_lib apqs_app)
 
 # The "MISSION_GLOBAL_STATIC_APPLIST" is similar to MISSION_GLOBAL_APPLIST
 # but the apps are statically linked.

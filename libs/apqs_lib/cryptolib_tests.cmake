@@ -11,7 +11,7 @@
 # ---------------------------------------------------------------------------
 
 # Set path to standalone CryptoLib source
-set(CRYPTOLIB_ROOT_DIR ${CMAKE_CURRENT_LIST_DIR}/cryptolib)
+set(CRYPTOLIB_ROOT_DIR ${CMAKE_CURRENT_LIST_DIR}/3rd/cryptolib)
 # Set a build directory for standalone CryptoLib
 set(CRYPTOLIB_TEST_BUILD_DIR ${CMAKE_BINARY_DIR}/cryptolib_build)
 # Path to the external test binary, produced by your custom build target

@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package handshake;
+
+message HandshakeRequest {
+    bytes epk_sender_pqc = 1;
+    bytes epk_sender_ec = 2;
+    bytes cipher_init_rekey = 3;
+    bytes ocspresp_mcs = 4;
+    uint32 sdls_key_id = 5;
+}
+
+message HandshakeResponse {
+    bytes cipher_rekey_resp1 = 1;
+    bytes cipher_rekey_resp2 = 2;
+    bytes epk_replier_ec = 3;
+    bytes tag_replier = 4;
+}
+
+message HandshakeKeyConfirmation {
+    bytes tag_sender = 1;
+}
+
+message HandshakeMessage {
+    oneof payload {
+        HandshakeRequest request = 1;
+        HandshakeResponse response = 2;
+        HandshakeKeyConfirmation keyconfirmation = 3;
+    }
+}

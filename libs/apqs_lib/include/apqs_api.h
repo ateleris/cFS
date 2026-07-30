@@ -1,8 +1,5 @@
 #pragma once
 
-// TODO add that only this hdr is needed
-//#include "apqs_sdls_types.h"
-
 #include <stdint.h>
 #include <stdbool.h>
 

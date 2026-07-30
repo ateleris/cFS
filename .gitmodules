@@ -37,6 +37,6 @@
 	url = https://github.com/ateleris/CF.git
 	branch = e2eqss
 [submodule "libs/apqs_lib/cryptolib"]
-	path = libs/apqs_lib/cryptolib
+	path = libs/apqs_lib/3rd/cryptolib
 	url = https://github.com/ateleris/CryptoLib.git
 	branch = e2eqss

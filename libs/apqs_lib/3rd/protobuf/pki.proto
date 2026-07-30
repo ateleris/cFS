@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package pki;
+
+// Ground -> flight: install the CA certificate and the pre-shared secret.
+// Must be uplinked over the authenticated channel (ground responsibility).
+message InitTrust {
+    bytes cert_ca = 1;  // X.509 certificate, DER
+    bytes pss_sat = 2;  // raw pre-shared secret, >= 32 bytes
+}
+
+// Ground -> flight: trigger onboard keygen + CSR generation.
+message RenewCertCommand {
+    uint32 nonce = 1;
+}
+
+// Flight -> ground: csr is a DER CertificationRequestInfo (RFC 2986 TBS,
+// unsigned - ML-KEM keys cannot sign); mac is HMAC-SHA3-384(PSS_sat, csr).
+message CsrRequest {
+    bytes csr = 1;
+    bytes mac = 2;
+}
+
+// Ground -> flight: the CA-signed certificate answering a CsrRequest.
+message NewCertificate {
+    bytes cert_sat = 1;  // X.509 certificate, DER
+}
+
+// Ground -> flight: MCS certificate with its stapled OCSP response.
+message CertExchange {
+    bytes cert_mcs = 1;       // X.509 certificate, DER
+    bytes ocsp_resp_mcs = 2;  // OCSP response (RFC 6960), DER
+}
+
+// Ground -> flight: request the current SAT certificate.
+message CertSatRequest {
+    uint32 nonce = 1;
+}
+
+// Flight -> ground: the current SAT certificate.
+message CertSat {
+    bytes cert_sat = 1;  // X.509 certificate, DER
+}
+
+// Flight -> ground: ack/failure for a ground-initiated operation.
+// op mirrors the PkiMessage payload tag this status responds to.
+message PkiStatus {
+    uint32 op = 1;
+    uint32 code = 2;    // 0 = success, otherwise error code
+    string detail = 3;
+}
+
+message PkiMessage {
+    oneof payload {
+        InitTrust init_trust = 1;
+        RenewCertCommand renew_cert = 2;
+        CsrRequest csr_request = 3;
+        NewCertificate new_certificate = 4;
+        CertExchange cert_exchange = 5;
+        CertSatRequest cert_sat_request = 6;
+        CertSat cert_sat = 7;
+        PkiStatus status = 8;
+    }
+}
