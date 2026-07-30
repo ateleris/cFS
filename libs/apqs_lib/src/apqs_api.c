@@ -1,5 +1,7 @@
 #include "apqs_api.h"
 
+#include "apqs_event.h"
+
 #include <assert.h>
 #include <string.h>
 
@@ -195,8 +197,9 @@ static int32_t CI_LAB_CryptoLib_Init(void)
     CI_LAB_Crypto_ClearSAs();
     CI_LAB_Crypto_PopulateSAs();
 
-    // needs CFS header - TODO custom logger
-    //CFE_EVS_SendEvent(CI_LAB_INIT_INF_EID, CFE_EVS_EventType_INFORMATION, "CI Lab Crypto Lib Initialized.");
+    // Under cFS this runs during library init, before any app registers with
+    // EVS, so the event may be dropped by the event service itself
+    apqs_event_send(APQS_LIB_INIT_INF_EID, APQS_EVENT_INFO, "APQS: CryptoLib initialized");
 
     return status;
 }

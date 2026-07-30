@@ -1,7 +1,7 @@
 #include "apqs_app_init_trust.h"
 #include "apqs_app_pki.h"
 #include "apqs_app_pem.h"
-#include "apqs_app_events.h"
+#include "apqs_event.h"
 
 #include "cfe.h"
 
@@ -16,7 +16,7 @@ void init_trust_handle(pki_InitTrust* init_trust)
     X509* ca_cert = d2i_X509(NULL, &p, (long)init_trust->cert_ca.size);
     if (!ca_cert)
     {
-        CFE_EVS_SendEvent(APQS_PKI_INIT_TRUST_ERR_EID, CFE_EVS_EventType_ERROR, "APQS PKI: init_trust CA cert does not parse");
+        apqs_event_send(APQS_PKI_INIT_TRUST_ERR_EID, APQS_EVENT_ERROR, "APQS PKI: init_trust CA cert does not parse");
         pki_send_status(pki_PkiMessage_init_trust_tag, PKI_STATUS_ERR_VALIDATION, "ca cert parse failed");
         return;
     }
@@ -26,7 +26,7 @@ void init_trust_handle(pki_InitTrust* init_trust)
     if (bc) BASIC_CONSTRAINTS_free(bc);
     if (!is_ca)
     {
-        CFE_EVS_SendEvent(APQS_PKI_INIT_TRUST_ERR_EID, CFE_EVS_EventType_ERROR, "APQS PKI: init_trust cert is not a CA");
+        apqs_event_send(APQS_PKI_INIT_TRUST_ERR_EID, APQS_EVENT_ERROR, "APQS PKI: init_trust cert is not a CA");
         pki_send_status(pki_PkiMessage_init_trust_tag, PKI_STATUS_ERR_VALIDATION, "not a CA cert");
         X509_free(ca_cert);
         return;
@@ -34,7 +34,7 @@ void init_trust_handle(pki_InitTrust* init_trust)
 
     if (pem_verify_cert_against_ca_x509(ca_cert, ca_cert) != 0)
     {
-        CFE_EVS_SendEvent(APQS_PKI_INIT_TRUST_ERR_EID, CFE_EVS_EventType_ERROR, "APQS PKI: init_trust CA self-signature invalid");
+        apqs_event_send(APQS_PKI_INIT_TRUST_ERR_EID, APQS_EVENT_ERROR, "APQS PKI: init_trust CA self-signature invalid");
         pki_send_status(pki_PkiMessage_init_trust_tag, PKI_STATUS_ERR_VALIDATION, "ca self-signature invalid");
         X509_free(ca_cert);
         return;
@@ -42,7 +42,7 @@ void init_trust_handle(pki_InitTrust* init_trust)
 
     if (init_trust->pss_sat.size < PKI_PSS_MIN_LENGTH)
     {
-        CFE_EVS_SendEvent(APQS_PKI_INIT_TRUST_ERR_EID, CFE_EVS_EventType_ERROR, "APQS PKI: init_trust PSS too short (%u bytes)", (unsigned)init_trust->pss_sat.size);
+        apqs_event_send(APQS_PKI_INIT_TRUST_ERR_EID, APQS_EVENT_ERROR, "APQS PKI: init_trust PSS too short (%u bytes)", (unsigned)init_trust->pss_sat.size);
         pki_send_status(pki_PkiMessage_init_trust_tag, PKI_STATUS_ERR_VALIDATION, "pss too short");
         X509_free(ca_cert);
         return;
@@ -51,7 +51,7 @@ void init_trust_handle(pki_InitTrust* init_trust)
     BIO* mem = BIO_new(BIO_s_mem());
     if (!mem || PEM_write_bio_X509(mem, ca_cert) != 1)
     {
-        CFE_EVS_SendEvent(APQS_PKI_INIT_TRUST_ERR_EID, CFE_EVS_EventType_ERROR, "APQS PKI: init_trust CA PEM conversion failed");
+        apqs_event_send(APQS_PKI_INIT_TRUST_ERR_EID, APQS_EVENT_ERROR, "APQS PKI: init_trust CA PEM conversion failed");
         pki_send_status(pki_PkiMessage_init_trust_tag, PKI_STATUS_ERR_STORE, "pem conversion failed");
         if (mem) BIO_free(mem);
         X509_free(ca_cert);
@@ -76,6 +76,6 @@ void init_trust_handle(pki_InitTrust* init_trust)
         return;
     }
 
-    CFE_EVS_SendEvent(APQS_PKI_INIT_TRUST_INF_EID, CFE_EVS_EventType_INFORMATION, "APQS PKI: init_trust complete - CA and PSS installed");
+    apqs_event_send(APQS_PKI_INIT_TRUST_INF_EID, APQS_EVENT_INFO, "APQS PKI: init_trust complete - CA and PSS installed");
     pki_send_status(pki_PkiMessage_init_trust_tag, PKI_STATUS_OK, "trust installed");
 }

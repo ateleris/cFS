@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include "apqs_errors.h"
+#include "apqs_event.h"
 #include "apqs_pem.h"
 #include "apqs_handshake.h"
 
@@ -23,7 +24,7 @@ static int cert_exchange_send_sat_cert(X509* sat_cert, uint32_t op)
     //X509* sat_cert = pem_load_cert_x509(pki_path_sat());
     //if (!sat_cert)
     //{
-    //    CFE_EVS_SendEvent(APQS_PKI_CERT_XCHG_ERR_EID, CFE_EVS_EventType_ERROR, "APQS PKI: active SAT certificate not loadable");
+    //    apqs_event_send(APQS_PKI_CERT_XCHG_ERR_EID, APQS_EVENT_ERROR, "APQS PKI: active SAT certificate not loadable");
     //    pki_send_status(op, PKI_STATUS_ERR_STORE, "sat cert not loadable");
     //    return -1;
     //}
@@ -40,7 +41,7 @@ static int cert_exchange_send_sat_cert(X509* sat_cert, uint32_t op)
     int der_len = i2d_X509(sat_cert, NULL);
     if (der_len <= 0 || der_len > (int)sizeof(reply_msg.payload.cert_sat.cert_sat.bytes))
     {
-        CFE_EVS_SendEvent(APQS_PKI_CERT_XCHG_ERR_EID, CFE_EVS_EventType_ERROR, "APQS PKI: SAT cert DER length %d out of range", der_len);
+        apqs_event_send(APQS_PKI_CERT_XCHG_ERR_EID, APQS_EVENT_ERROR, "APQS PKI: SAT cert DER length %d out of range", der_len);
         pki_send_status(op, PKI_STATUS_ERR_STORE, "sat cert der encode failed");
         X509_free(sat_cert);
         return -1;
@@ -53,7 +54,7 @@ static int cert_exchange_send_sat_cert(X509* sat_cert, uint32_t op)
     pb_ostream_t stream = pb_ostream_from_buffer(encode_buf, sizeof(encode_buf));
     if (!pb_encode(&stream, pki_PkiMessage_fields, &reply_msg))
     {
-        CFE_EVS_SendEvent(APQS_PKI_CERT_XCHG_ERR_EID, CFE_EVS_EventType_ERROR, "APQS PKI: CertSat encode failed");
+        apqs_event_send(APQS_PKI_CERT_XCHG_ERR_EID, APQS_EVENT_ERROR, "APQS PKI: CertSat encode failed");
         pki_send_status(op, PKI_STATUS_ERR_STORE, "cert sat encode failed");
         return -1;
     }
@@ -65,7 +66,7 @@ static int cert_exchange_send_sat_cert(X509* sat_cert, uint32_t op)
     }
 
     send_file_via_cfdp(PKI_CERT_SAT_FILE_PATH, "PKI_CERT_SAT.pbin");
-    CFE_EVS_SendEvent(APQS_PKI_CERT_SAT_SENT_INF_EID, CFE_EVS_EventType_INFORMATION, "APQS PKI: SAT certificate sent to ground (%d bytes DER)", der_len);
+    apqs_event_send(APQS_PKI_CERT_SAT_SENT_INF_EID, APQS_EVENT_INFO, "APQS PKI: SAT certificate sent to ground (%d bytes DER)", der_len);
     return 0;
 }
 
@@ -91,7 +92,7 @@ void cert_exchange_handle(pki_CertExchange* cert_exchange)
     mcs_cert = d2i_X509(NULL, &p, (long)cert_exchange->cert_mcs.size);
     if (!mcs_cert)
     {
-        CFE_EVS_SendEvent(APQS_PKI_CERT_XCHG_ERR_EID, CFE_EVS_EventType_ERROR, "APQS PKI: MCS certificate does not parse");
+        apqs_event_send(APQS_PKI_CERT_XCHG_ERR_EID, APQS_EVENT_ERROR, "APQS PKI: MCS certificate does not parse");
         pki_send_status(pki_PkiMessage_cert_exchange_tag, PKI_STATUS_ERR_VALIDATION, "cert parse failed");
         cert_exchange_handle_cleanup(mcs_cert, ca_cert, mem);
         return;
@@ -101,7 +102,7 @@ void cert_exchange_handle(pki_CertExchange* cert_exchange)
     ca_cert = pem_load_ca_cert_x509(pki_path_ca());
     if (!ca_cert || pem_verify_cert_against_ca_x509(mcs_cert, ca_cert) != 0)
     {
-        CFE_EVS_SendEvent(APQS_PKI_CERT_XCHG_ERR_EID, CFE_EVS_EventType_ERROR, "APQS PKI: MCS certificate failed CA verification");
+        apqs_event_send(APQS_PKI_CERT_XCHG_ERR_EID, APQS_EVENT_ERROR, "APQS PKI: MCS certificate failed CA verification");
         pki_send_status(pki_PkiMessage_cert_exchange_tag, PKI_STATUS_ERR_VALIDATION, "ca verification failed");
         cert_exchange_handle_cleanup(mcs_cert, ca_cert, mem);
         return;
@@ -112,7 +113,7 @@ void cert_exchange_handle(pki_CertExchange* cert_exchange)
     if (cert_exchange->ocsp_resp_mcs.size == 0 ||
         ocsp_verify_response_x509(cert_exchange->ocsp_resp_mcs.bytes, cert_exchange->ocsp_resp_mcs.size, mcs_cert, ca_cert) != 0)
     {
-        CFE_EVS_SendEvent(APQS_PKI_CERT_XCHG_ERR_EID, CFE_EVS_EventType_ERROR, "APQS PKI: MCS certificate OCSP verification failed - exchange terminated");
+        apqs_event_send(APQS_PKI_CERT_XCHG_ERR_EID, APQS_EVENT_ERROR, "APQS PKI: MCS certificate OCSP verification failed - exchange terminated");
         pki_send_status(pki_PkiMessage_cert_exchange_tag, PKI_STATUS_ERR_VALIDATION, "ocsp verification failed");
         cert_exchange_handle_cleanup(mcs_cert, ca_cert, mem);
         return;
@@ -122,7 +123,7 @@ void cert_exchange_handle(pki_CertExchange* cert_exchange)
     mem = BIO_new(BIO_s_mem());
     if (!mem || PEM_write_bio_X509(mem, mcs_cert) != 1 || PEM_write_bio_X509(mem, ca_cert) != 1)
     {
-        CFE_EVS_SendEvent(APQS_PKI_CERT_XCHG_ERR_EID, CFE_EVS_EventType_ERROR, "APQS PKI: MCS certificate PEM conversion failed");
+        apqs_event_send(APQS_PKI_CERT_XCHG_ERR_EID, APQS_EVENT_ERROR, "APQS PKI: MCS certificate PEM conversion failed");
         pki_send_status(pki_PkiMessage_cert_exchange_tag, PKI_STATUS_ERR_STORE, "pem conversion failed");
         cert_exchange_handle_cleanup(mcs_cert, ca_cert, mem);
         return;
@@ -137,7 +138,7 @@ void cert_exchange_handle(pki_CertExchange* cert_exchange)
         return;
     }
 
-    CFE_EVS_SendEvent(APQS_PKI_CERT_XCHG_INF_EID, CFE_EVS_EventType_INFORMATION, "APQS PKI: MCS certificate verified (chain + OCSP) and stored");
+    apqs_event_send(APQS_PKI_CERT_XCHG_INF_EID, APQS_EVENT_INFO, "APQS PKI: MCS certificate verified (chain + OCSP) and stored");
 
     /* 5. Reply with the SAT certificate (best effort). On cold start no SAT
      * cert exists until renewal runs - that must not fail the exchange itself:
@@ -145,7 +146,7 @@ void cert_exchange_handle(pki_CertExchange* cert_exchange)
      * fetch the certificate later via CertSatRequest. */
     if (!pki_store_vpath_exists(PKI_VPATH_SAT_PEM))
     {
-        CFE_EVS_SendEvent(APQS_PKI_CERT_XCHG_INF_EID, CFE_EVS_EventType_INFORMATION, "APQS PKI: no SAT certificate yet - skipping cert reply (run renewal)");
+        apqs_event_send(APQS_PKI_CERT_XCHG_INF_EID, APQS_EVENT_INFO, "APQS PKI: no SAT certificate yet - skipping cert reply (run renewal)");
         pki_send_status(pki_PkiMessage_cert_exchange_tag, PKI_STATUS_OK, "exchange ok, no sat cert yet");
     }
     else if (cert_exchange_send_sat_cert(pki_PkiMessage_cert_exchange_tag) == 0)

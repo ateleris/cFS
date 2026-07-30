@@ -6,7 +6,7 @@
 #include "apqs_app_pem.h"
 #include "apqs_app_crypto.h"
 #include "apqs_app_hs.h"
-#include "apqs_app_events.h"
+#include "apqs_event.h"
 
 #include "protobuf/pb_encode.h"
 
@@ -174,7 +174,7 @@ static void cert_renewal_start_fail(uint8_t* pss, size_t pss_size, uint8_t* sk, 
     state->version = PKI_RENEWAL_VERSION;
     state->phase   = PKI_RENEWAL_IDLE;
     pki_store_save_renewal_state(state);
-    CFE_EVS_SendEvent(APQS_PKI_RENEW_ERR_EID, CFE_EVS_EventType_ERROR, "APQS PKI: cert renewal start failed");
+    apqs_event_send(APQS_PKI_RENEW_ERR_EID, APQS_EVENT_ERROR, "APQS PKI: cert renewal start failed");
     pki_send_status(pki_PkiMessage_renew_cert_tag, PKI_STATUS_ERR_STORE, "csr generation failed");
 }
 
@@ -190,7 +190,7 @@ void cert_renewal_start(void)
     /* the CSR MAC needs the PSS - check before any key material is generated */
     if (pki_store_load_pss(pss, &pss_len) != 0)
     {
-        CFE_EVS_SendEvent(APQS_PKI_RENEW_ERR_EID, CFE_EVS_EventType_ERROR, "APQS PKI: cert renewal aborted - no PSS installed (run init_trust first)");
+        apqs_event_send(APQS_PKI_RENEW_ERR_EID, APQS_EVENT_ERROR, "APQS PKI: cert renewal aborted - no PSS installed (run init_trust first)");
         pki_send_status(pki_PkiMessage_renew_cert_tag, PKI_STATUS_ERR_STATE, "no pss installed");
         return;
     }
@@ -275,7 +275,7 @@ void cert_renewal_start(void)
     }
 
     send_file_via_cfdp(PKI_CSR_FILE_PATH, "PKI_CSR.pbin");
-    CFE_EVS_SendEvent(APQS_PKI_CSR_SENT_INF_EID, CFE_EVS_EventType_INFORMATION, "APQS PKI: CSR sent (%lu bytes), renewal pending", (unsigned long)csr_len);
+    apqs_event_send(APQS_PKI_CSR_SENT_INF_EID, APQS_EVENT_INFO, "APQS PKI: CSR sent (%lu bytes), renewal pending", (unsigned long)csr_len);
 
     memset(state.seed, 0, sizeof(state.seed));
 }
@@ -380,7 +380,7 @@ void cert_renewal_handle_new_certificate(pki_NewCertificate* new_cert_msg)
     pki_store_load_renewal_state(&state);
     if (state.phase != PKI_RENEWAL_CSR_PENDING)
     {
-        CFE_EVS_SendEvent(APQS_PKI_RENEW_ERR_EID, CFE_EVS_EventType_ERROR, "APQS PKI: certificate received but no CSR pending");
+        apqs_event_send(APQS_PKI_RENEW_ERR_EID, APQS_EVENT_ERROR, "APQS PKI: certificate received but no CSR pending");
         pki_send_status(pki_PkiMessage_new_certificate_tag, PKI_STATUS_ERR_STATE, "no csr pending");
         return;
     }
@@ -392,7 +392,7 @@ void cert_renewal_handle_new_certificate(pki_NewCertificate* new_cert_msg)
     {
         memset(sk, 0, sizeof(sk));
         memset(&state, 0, sizeof(state));
-        CFE_EVS_SendEvent(APQS_PKI_RENEW_ERR_EID, CFE_EVS_EventType_ERROR, "APQS PKI: pending key re-derivation failed (state corrupt?)");
+        apqs_event_send(APQS_PKI_RENEW_ERR_EID, APQS_EVENT_ERROR, "APQS PKI: pending key re-derivation failed (state corrupt?)");
         pki_send_status(pki_PkiMessage_new_certificate_tag, PKI_STATUS_ERR_STATE, "pending key invalid");
         return;
     }
@@ -403,7 +403,7 @@ void cert_renewal_handle_new_certificate(pki_NewCertificate* new_cert_msg)
     new_cert = d2i_X509(NULL, &p, (long)new_cert_msg->cert_sat.size);
     if (!new_cert)
     {
-        CFE_EVS_SendEvent(APQS_PKI_RENEW_ERR_EID, CFE_EVS_EventType_ERROR, "APQS PKI: new certificate does not parse");
+        apqs_event_send(APQS_PKI_RENEW_ERR_EID, APQS_EVENT_ERROR, "APQS PKI: new certificate does not parse");
         pki_send_status(pki_PkiMessage_new_certificate_tag, PKI_STATUS_ERR_VALIDATION, "cert parse failed");
         cert_renewal_handle_new_certificate_cleanup(new_cert, ca_cert, &state, pk, sizeof(pk));
         return;
@@ -414,7 +414,7 @@ void cert_renewal_handle_new_certificate(pki_NewCertificate* new_cert_msg)
     if (X509_PUBKEY_get0_param(NULL, &cert_pk, &cert_pk_len, NULL, X509_get_X509_PUBKEY(new_cert)) != 1 ||
         cert_pk_len != ML_KEM_768_PK_LENGTH || memcmp(cert_pk, pk, ML_KEM_768_PK_LENGTH) != 0)
     {
-        CFE_EVS_SendEvent(APQS_PKI_RENEW_ERR_EID, CFE_EVS_EventType_ERROR, "APQS PKI: certificate public key does not match the pending CSR key");
+        apqs_event_send(APQS_PKI_RENEW_ERR_EID, APQS_EVENT_ERROR, "APQS PKI: certificate public key does not match the pending CSR key");
         pki_send_status(pki_PkiMessage_new_certificate_tag, PKI_STATUS_ERR_VALIDATION, "pubkey mismatch");
         cert_renewal_handle_new_certificate_cleanup(new_cert, ca_cert, &state, pk, sizeof(pk));
         return;
@@ -424,7 +424,7 @@ void cert_renewal_handle_new_certificate(pki_NewCertificate* new_cert_msg)
     ca_cert = pem_load_ca_cert_x509(pki_path_ca());
     if (!ca_cert || pem_verify_cert_against_ca_x509(new_cert, ca_cert) != 0)
     {
-        CFE_EVS_SendEvent(APQS_PKI_RENEW_ERR_EID, CFE_EVS_EventType_ERROR, "APQS PKI: new certificate failed CA verification");
+        apqs_event_send(APQS_PKI_RENEW_ERR_EID, APQS_EVENT_ERROR, "APQS PKI: new certificate failed CA verification");
         pki_send_status(pki_PkiMessage_new_certificate_tag, PKI_STATUS_ERR_VALIDATION, "ca verification failed");
         cert_renewal_handle_new_certificate_cleanup(new_cert, ca_cert, &state, pk, sizeof(pk));
         return;
@@ -445,14 +445,14 @@ void cert_renewal_handle_new_certificate(pki_NewCertificate* new_cert_msg)
     if (pki_store_vpath_exists(PKI_VPATH_SAT_PEM) &&
         OS_rename(PKI_VPATH_SAT_PEM, PKI_VPATH_SAT_OLD) != OS_SUCCESS)
     {
-        CFE_EVS_SendEvent(APQS_PKI_RENEW_ERR_EID, CFE_EVS_EventType_ERROR, "APQS PKI: certificate swap rename failed");
+        apqs_event_send(APQS_PKI_RENEW_ERR_EID, APQS_EVENT_ERROR, "APQS PKI: certificate swap rename failed");
         pki_send_status(pki_PkiMessage_new_certificate_tag, PKI_STATUS_ERR_STORE, "swap failed");
         cert_renewal_handle_new_certificate_cleanup(new_cert, ca_cert, &state, pk, sizeof(pk));
         return;
     }
     if (OS_rename(PKI_VPATH_SAT_NEW, PKI_VPATH_SAT_PEM) != OS_SUCCESS)
     {
-        CFE_EVS_SendEvent(APQS_PKI_RENEW_ERR_EID, CFE_EVS_EventType_ERROR, "APQS PKI: certificate swap rename failed");
+        apqs_event_send(APQS_PKI_RENEW_ERR_EID, APQS_EVENT_ERROR, "APQS PKI: certificate swap rename failed");
         pki_send_status(pki_PkiMessage_new_certificate_tag, PKI_STATUS_ERR_STORE, "swap failed");
         cert_renewal_handle_new_certificate_cleanup(new_cert, ca_cert, &state, pk, sizeof(pk));
         return;
@@ -465,7 +465,7 @@ void cert_renewal_handle_new_certificate(pki_NewCertificate* new_cert_msg)
     state.phase   = PKI_RENEWAL_IDLE;
     pki_store_save_renewal_state(&state);
 
-    CFE_EVS_SendEvent(APQS_PKI_CERT_SWAP_INF_EID, CFE_EVS_EventType_INFORMATION, "APQS PKI: new certificate installed, old key retained until next successful handshake");
+    apqs_event_send(APQS_PKI_CERT_SWAP_INF_EID, APQS_EVENT_INFO, "APQS PKI: new certificate installed, old key retained until next successful handshake");
     pki_send_status(pki_PkiMessage_new_certificate_tag, PKI_STATUS_OK, "certificate installed");
 
     cert_renewal_handle_new_certificate_cleanup(new_cert, ca_cert, &state, pk, sizeof(pk));
@@ -476,6 +476,6 @@ void cert_renewal_confirm_new_key(void)
     if (pki_store_vpath_exists(PKI_VPATH_SAT_OLD))
     {
         OS_remove(PKI_VPATH_SAT_OLD);
-        CFE_EVS_SendEvent(APQS_PKI_CERT_SWAP_INF_EID, CFE_EVS_EventType_INFORMATION, "APQS PKI: new key confirmed by successful handshake, rollback copy removed");
+        apqs_event_send(APQS_PKI_CERT_SWAP_INF_EID, APQS_EVENT_INFO, "APQS PKI: new key confirmed by successful handshake, rollback copy removed");
     }
 }

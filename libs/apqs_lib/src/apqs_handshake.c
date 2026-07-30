@@ -5,7 +5,7 @@
 #include "apqs_app_pki.h"
 #include "apqs_app_cert_renewal.h"
 #include "apqs_app_spki.h"
-#include "apqs_app_events.h"
+#include "apqs_event.h"
 
 #include "protobuf/pb_decode.h"
 #include "protobuf/pb_encode.h"
@@ -122,29 +122,29 @@ int handshake_load_keys(void)
 {
     if (pem_load_sat_secret_key(pki_path_sat(), F_PK_sat_pq, F_SK_sat_pq) != 0)
     {
-        CFE_EVS_SendEvent(APQS_PEM_ERR_EID, CFE_EVS_EventType_ERROR, "APQS: Failed to load SAT private key from %s", pki_path_sat());
+        apqs_event_send(APQS_PEM_ERR_EID, APQS_EVENT_ERROR, "APQS: Failed to load SAT private key from %s", pki_path_sat());
         return -1;
     }
 
     if (pem_load_public_key(pki_path_mcs(), F_PK_mcs_pq) != 0)
     {
-        CFE_EVS_SendEvent(APQS_PEM_ERR_EID, CFE_EVS_EventType_ERROR, "APQS: Failed to load MCS public key from %s", pki_path_mcs());
+        apqs_event_send(APQS_PEM_ERR_EID, APQS_EVENT_ERROR, "APQS: Failed to load MCS public key from %s", pki_path_mcs());
         return -1;
     }
 
     if (pem_load_identity(pki_path_sat(), id_sat, &id_sat_len) != 0)
     {
-        CFE_EVS_SendEvent(APQS_PEM_ERR_EID, CFE_EVS_EventType_ERROR, "APQS: Failed to load SAT identity from %s", pki_path_sat());
+        apqs_event_send(APQS_PEM_ERR_EID, APQS_EVENT_ERROR, "APQS: Failed to load SAT identity from %s", pki_path_sat());
         return -1;
     }
 
     if (pem_load_identity(pki_path_mcs(), id_mcs, &id_mcs_len) != 0)
     {
-        CFE_EVS_SendEvent(APQS_PEM_ERR_EID, CFE_EVS_EventType_ERROR, "APQS: Failed to load MCS identity from %s", pki_path_mcs());
+        apqs_event_send(APQS_PEM_ERR_EID, APQS_EVENT_ERROR, "APQS: Failed to load MCS identity from %s", pki_path_mcs());
         return -1;
     }
 
-    CFE_EVS_SendEvent(APQS_PEM_INF_EID, CFE_EVS_EventType_INFORMATION, "APQS: PQ keys loaded from PEM files");
+    apqs_event_send(APQS_PEM_INF_EID, APQS_EVENT_INFO, "APQS: PQ keys loaded from PEM files");
     return 0;
 }
 
@@ -419,24 +419,24 @@ int handshake_rekey_pb(handshake_HandshakeRequest* hs_request, uint8_t* hs_respo
     // Verify the MCS certificate chain against the CA (Crypto.Ver_Cert_PKCA) before trusting its OCSP status
     if (pem_verify_cert_against_ca(pki_path_mcs(), pki_path_ca()) != 0)
     {
-        CFE_EVS_SendEvent(APQS_CERTVER_ERR_EID, CFE_EVS_EventType_ERROR, "APQS: MCS certificate chain verification failed");
+        apqs_event_send(APQS_CERTVER_ERR_EID, APQS_EVENT_ERROR, "APQS: MCS certificate chain verification failed");
         return HANDSHAKE_ERROR;
     }
-    CFE_EVS_SendEvent(APQS_CERTVER_INF_EID, CFE_EVS_EventType_INFORMATION, "APQS: MCS certificate verified against CA");
+    apqs_event_send(APQS_CERTVER_INF_EID, APQS_EVENT_INFO, "APQS: MCS certificate verified against CA");
 
     // Validate OCSP response from M1 before any key operations
     if (hs_request->ocspresp_mcs.size > 0)
     {
         if (ocsp_verify_response(hs_request->ocspresp_mcs.bytes, hs_request->ocspresp_mcs.size, pki_path_mcs(), pki_path_ca()) != 0)
         {
-            CFE_EVS_SendEvent(APQS_OCSP_ERR_EID, CFE_EVS_EventType_ERROR, "APQS: OCSP validation failed for MCS certificate");
+            apqs_event_send(APQS_OCSP_ERR_EID, APQS_EVENT_ERROR, "APQS: OCSP validation failed for MCS certificate");
             return HANDSHAKE_ERROR;
         }
-        CFE_EVS_SendEvent(APQS_OCSP_INF_EID, CFE_EVS_EventType_INFORMATION, "APQS: OCSP response validated — MCS certificate status GOOD");
+        apqs_event_send(APQS_OCSP_INF_EID, APQS_EVENT_INFO, "APQS: OCSP response validated — MCS certificate status GOOD");
     }
     else
     {
-        CFE_EVS_SendEvent(APQS_OCSP_ERR_EID, CFE_EVS_EventType_ERROR, "APQS: No OCSP response in M1 — aborting handshake");
+        apqs_event_send(APQS_OCSP_ERR_EID, APQS_EVENT_ERROR, "APQS: No OCSP response in M1 — aborting handshake");
         return HANDSHAKE_ERROR;
     }
 
@@ -584,7 +584,7 @@ int handshake_set_session_key(void)
     {
         snprintf(&key_hex[2 * i], 3, "%02X", key_session[i]);
     }
-    CFE_EVS_SendEvent(APQS_HS_SESSION_KEY_INF_EID, CFE_EVS_EventType_INFORMATION,
+    apqs_event_send(APQS_HS_SESSION_KEY_INF_EID, APQS_EVENT_INFO,
                       "APQS: session key installed (key_id=%u, key=%s)",
                       (unsigned int)key_id, key_hex);
 
@@ -609,7 +609,7 @@ int handshake_init(void)
         int32 status = OS_mkdir(HS_INBOUND_DIR, OS_READ_WRITE);
         if (status != OS_SUCCESS)
         {
-            CFE_EVS_SendEvent(APQS_CF_HS_ERR_EID, CFE_EVS_EventType_ERROR, "APQS: mkdir %s failed (rc=%ld)",
+            apqs_event_send(APQS_CF_HS_ERR_EID, APQS_EVENT_ERROR, "APQS: mkdir %s failed (rc=%ld)",
                               HS_INBOUND_DIR, (long)status);
             return -1;
         }
@@ -644,7 +644,7 @@ void send_file_via_cfdp(const char* src_filename, const char* dst_filename)
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(txCmd.CommandHeader));
     CFE_Status_t status = CFE_SB_TransmitMsg(CFE_MSG_PTR(txCmd.CommandHeader), true);
     if (status != CFE_SUCCESS)
-        CFE_EVS_SendEvent(APQS_CF_HS_ERR_EID, CFE_EVS_EventType_ERROR, "APQS: Failed to send CF TX FILE cmd (rc=0x%08lX)", (unsigned long)status);
+        apqs_event_send(APQS_CF_HS_ERR_EID, APQS_EVENT_ERROR, "APQS: Failed to send CF TX FILE cmd (rc=0x%08lX)", (unsigned long)status);
 }
 
 /*
@@ -652,7 +652,7 @@ void send_file_via_cfdp(const char* src_filename, const char* dst_filename)
 */
 void handshake_rekey_cfdp(handshake_HandshakeRequest* request)
 {
-    CFE_EVS_SendEvent(APQS_CF_HS_M1_INF_EID, CFE_EVS_EventType_INFORMATION, "APQS: Processing CFDP handshake rekey");
+    apqs_event_send(APQS_CF_HS_M1_INF_EID, APQS_EVENT_INFO, "APQS: Processing CFDP handshake rekey");
 
     uint8_t m2_buf[M2_BUFFER_SIZE];
     memset(m2_buf, 0, sizeof(m2_buf));
@@ -660,7 +660,7 @@ void handshake_rekey_cfdp(handshake_HandshakeRequest* request)
 
     if (handshake_rekey_pb(request, m2_buf, &m2_size) != HANDSHAKE_SUCCESS)
     {
-        CFE_EVS_SendEvent(APQS_CF_HS_ERR_EID, CFE_EVS_EventType_ERROR, "APQS: CFDP handshake M1 processing failed");
+        apqs_event_send(APQS_CF_HS_ERR_EID, APQS_EVENT_ERROR, "APQS: CFDP handshake M1 processing failed");
         handshake_reset_keys(true);
         return;
     }
@@ -670,7 +670,7 @@ void handshake_rekey_cfdp(handshake_HandshakeRequest* request)
     int32 os_status = OS_OpenCreate(&fd, M2_FILE_PATH, OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, OS_WRITE_ONLY);
     if (os_status != OS_SUCCESS)
     {
-        CFE_EVS_SendEvent(APQS_CF_HS_ERR_EID, CFE_EVS_EventType_ERROR, "APQS: Failed to create M2 file %s (rc=%ld)", M2_FILE_PATH, (long)os_status);
+        apqs_event_send(APQS_CF_HS_ERR_EID, APQS_EVENT_ERROR, "APQS: Failed to create M2 file %s (rc=%ld)", M2_FILE_PATH, (long)os_status);
         handshake_reset_keys(true);
         return;
     }
@@ -680,14 +680,14 @@ void handshake_rekey_cfdp(handshake_HandshakeRequest* request)
 
     if (bytes_written != (int32)m2_size)
     {
-        CFE_EVS_SendEvent(APQS_CF_HS_ERR_EID, CFE_EVS_EventType_ERROR, "APQS: Failed to write M2 file (wrote=%ld, expected=%lu)", (long)bytes_written, (unsigned long)m2_size);
+        apqs_event_send(APQS_CF_HS_ERR_EID, APQS_EVENT_ERROR, "APQS: Failed to write M2 file (wrote=%ld, expected=%lu)", (long)bytes_written, (unsigned long)m2_size);
         handshake_reset_keys(true);
         return;
     }
 
     /* Deliver M2 into the ground's handshake folder (mirrors M1's "handshake/M1.pbin") */
     send_file_via_cfdp(M2_FILE_PATH, "handshake/M2.pbin");
-    CFE_EVS_SendEvent(APQS_CF_HS_M2_SENT_INF_EID, CFE_EVS_EventType_INFORMATION, "APQS: M2 written to %s (%lu bytes), CF TX requested", M2_FILE_PATH, (unsigned long)m2_size);
+    apqs_event_send(APQS_CF_HS_M2_SENT_INF_EID, APQS_EVENT_INFO, "APQS: M2 written to %s (%lu bytes), CF TX requested", M2_FILE_PATH, (unsigned long)m2_size);
 }
 
 /*
@@ -697,7 +697,7 @@ void handshake_key_conf_cfdp(handshake_HandshakeKeyConfirmation* keyconf)
 {
     if (handshake_key_conf_pb(keyconf) != HANDSHAKE_SUCCESS)
     {
-        CFE_EVS_SendEvent(APQS_CF_HS_ERR_EID, CFE_EVS_EventType_ERROR, "APQS: CFDP handshake M3 verification failed");
+        apqs_event_send(APQS_CF_HS_ERR_EID, APQS_EVENT_ERROR, "APQS: CFDP handshake M3 verification failed");
         handshake_reset_keys(true);
         return;
     }
@@ -714,7 +714,7 @@ void handshake_key_conf_cfdp(handshake_HandshakeKeyConfirmation* keyconf)
     /* a completed handshake proves the active key/cert - drop any renewal rollback copy */
     cert_renewal_confirm_new_key();
 
-    CFE_EVS_SendEvent(APQS_CF_HS_M3_OK_INF_EID, CFE_EVS_EventType_INFORMATION, "APQS: CFDP handshake complete");
+    apqs_event_send(APQS_CF_HS_M3_OK_INF_EID, APQS_EVENT_INFO, "APQS: CFDP handshake complete");
 }
 
 /*
@@ -723,17 +723,17 @@ void handshake_key_conf_cfdp(handshake_HandshakeKeyConfirmation* keyconf)
 */
 void handshake_handle_cfdp_file(const char* filepath, uint32_t fsize, uint32_t txn_stat)
 {
-    CFE_EVS_SendEvent(APQS_CF_HS_M1_INF_EID, CFE_EVS_EventType_INFORMATION, "APQS: Handshake file detected: %s (size=%lu, txn_stat=%lu)", filepath, (unsigned long)fsize, (unsigned long)txn_stat);
+    apqs_event_send(APQS_CF_HS_M1_INF_EID, APQS_EVENT_INFO, "APQS: Handshake file detected: %s (size=%lu, txn_stat=%lu)", filepath, (unsigned long)fsize, (unsigned long)txn_stat);
 
     if (txn_stat != 0)
-        CFE_EVS_SendEvent(APQS_CF_HS_ERR_EID, CFE_EVS_EventType_ERROR, "APQS: CFDP transfer error for %s (stat=%lu), attempting read anyway", filepath, (unsigned long)txn_stat);
+        apqs_event_send(APQS_CF_HS_ERR_EID, APQS_EVENT_ERROR, "APQS: CFDP transfer error for %s (stat=%lu), attempting read anyway", filepath, (unsigned long)txn_stat);
 
     /* Try to read the file even if transfer had errors -- it may be on disk */
     osal_id_t fd;
     int32 os_status = OS_OpenCreate(&fd, filepath, OS_FILE_FLAG_NONE, OS_READ_ONLY);
     if (os_status != OS_SUCCESS)
     {
-        CFE_EVS_SendEvent(APQS_CF_HS_ERR_EID, CFE_EVS_EventType_ERROR, "APQS: Failed to open handshake file %s (rc=%ld)", filepath, (long)os_status);
+        apqs_event_send(APQS_CF_HS_ERR_EID, APQS_EVENT_ERROR, "APQS: Failed to open handshake file %s (rc=%ld)", filepath, (long)os_status);
         return;
     }
 
@@ -744,10 +744,10 @@ void handshake_handle_cfdp_file(const char* filepath, uint32_t fsize, uint32_t t
 
     if (bytes_read <= 0)
     {
-        CFE_EVS_SendEvent(APQS_CF_HS_ERR_EID, CFE_EVS_EventType_ERROR, "APQS: Failed to read handshake file %s (read=%ld)", filepath, (long)bytes_read);
+        apqs_event_send(APQS_CF_HS_ERR_EID, APQS_EVENT_ERROR, "APQS: Failed to read handshake file %s (read=%ld)", filepath, (long)bytes_read);
         return;
     }
-    CFE_EVS_SendEvent(APQS_CF_HS_M1_INF_EID, CFE_EVS_EventType_INFORMATION, "APQS: Read %ld bytes from %s, decoding protobuf", (long)bytes_read, filepath);
+    apqs_event_send(APQS_CF_HS_M1_INF_EID, APQS_EVENT_INFO, "APQS: Read %ld bytes from %s, decoding protobuf", (long)bytes_read, filepath);
 
     static handshake_HandshakeMessage msg;
     msg = (handshake_HandshakeMessage)handshake_HandshakeMessage_init_zero;
@@ -755,10 +755,10 @@ void handshake_handle_cfdp_file(const char* filepath, uint32_t fsize, uint32_t t
 
     if (!pb_decode(&stream, handshake_HandshakeMessage_fields, &msg))
     {
-        CFE_EVS_SendEvent(APQS_CF_HS_ERR_EID, CFE_EVS_EventType_ERROR, "APQS: Failed to decode handshake protobuf from %s (%ld bytes)", filepath, (long)bytes_read);
+        apqs_event_send(APQS_CF_HS_ERR_EID, APQS_EVENT_ERROR, "APQS: Failed to decode handshake protobuf from %s (%ld bytes)", filepath, (long)bytes_read);
         return;
     }
-    CFE_EVS_SendEvent(APQS_CF_HS_M1_INF_EID, CFE_EVS_EventType_INFORMATION, "APQS: Protobuf decoded, which_payload=%u", (unsigned)msg.which_payload);
+    apqs_event_send(APQS_CF_HS_M1_INF_EID, APQS_EVENT_INFO, "APQS: Protobuf decoded, which_payload=%u", (unsigned)msg.which_payload);
 
     switch (msg.which_payload)
     {
@@ -771,7 +771,7 @@ void handshake_handle_cfdp_file(const char* filepath, uint32_t fsize, uint32_t t
         break;
 
     default:
-        CFE_EVS_SendEvent(APQS_CF_HS_ERR_EID, CFE_EVS_EventType_ERROR, "APQS: Unexpected handshake payload tag %u from %s", (unsigned)msg.which_payload, filepath);
+        apqs_event_send(APQS_CF_HS_ERR_EID, APQS_EVENT_ERROR, "APQS: Unexpected handshake payload tag %u from %s", (unsigned)msg.which_payload, filepath);
         break;
     }
 }

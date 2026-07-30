@@ -13,6 +13,7 @@ set(APQS_SOURCES
    src/apqs_cert_exchange.c
    src/apqs_cert_renewal.c
    src/apqs_crypto.c
+   src/apqs_event.c
    src/apqs_handshake.c
    src/apqs_init_trust.c
    src/apqs_pem.c
@@ -29,6 +30,7 @@ add_cfe_app(apqs_lib ${APQS_SOURCES})
 target_sources(apqs_lib
     PUBLIC
         include/apqs_api.h
+        include/apqs_event.h
         include/apqs_sdls_types.h
     PRIVATE 
         include/apqs_cfs_init.h
