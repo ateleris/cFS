@@ -4,3 +4,4 @@ build
 .DS_Store
 .vs
 apps/apqs_app/keys/
+/libs/apqs_lib_old/

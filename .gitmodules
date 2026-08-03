@@ -18,10 +18,6 @@
 	path = apps/to_lab
 	url = https://github.com/ateleris/to_lab.git
 	branch = e2eqss
-[submodule "apps/apqs_app"]
-	path = apps/apqs_app
-	url = https://github.com/ateleris/APQS.git
-	branch = main
 [submodule "tools/tblCRCTool"]
 	path = tools/tblCRCTool
 	url = https://github.com/nasa/tblCRCTool.git
@@ -35,8 +31,4 @@
 [submodule "apps/cf"]
 	path = apps/cf
 	url = https://github.com/ateleris/CF.git
-	branch = e2eqss
-[submodule "libs/apqs_lib/cryptolib"]
-	path = libs/apqs_lib/3rd/cryptolib
-	url = https://github.com/ateleris/CryptoLib.git
 	branch = e2eqss
