@@ -32,3 +32,7 @@
 	path = apps/cf
 	url = https://github.com/ateleris/CF.git
 	branch = e2eqss
+[submodule "libs/apqs_cfs_wrapper/apqs_lib"]
+	path = libs/apqs_cfs_wrapper/apqs_lib
+	url = https://github.com/ateleris/APQS.git
+	branch = swap-submodules

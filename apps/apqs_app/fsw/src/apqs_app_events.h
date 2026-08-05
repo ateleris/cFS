@@ -1,0 +1,36 @@
+#pragma once
+
+#define APQS_RESERVED_EID          0
+#define APQS_STARTUP_INF_EID       1
+#define APQS_COMMAND_ERR_EID       2
+#define APQS_COMMANDNOP_INF_EID    3
+#define APQS_COMMANDRST_INF_EID    4
+#define APQS_INVALID_MSGID_ERR_EID 5
+#define APQS_LEN_ERR_EID           6
+#define APQS_PIPE_ERR_EID          7
+#define APQS_CF_FILE_RECV_INF_EID  8
+#define APQS_CF_HS_M1_INF_EID      9
+#define APQS_CF_HS_M2_SENT_INF_EID 10
+#define APQS_CF_HS_M3_OK_INF_EID   11
+#define APQS_CF_HS_ERR_EID         12
+#define APQS_PEM_ERR_EID           13
+#define APQS_PEM_INF_EID           14
+#define APQS_OCSP_ERR_EID          15
+#define APQS_OCSP_INF_EID          16
+#define APQS_PQC_OSSL_ERR_EID      17
+#define APQS_PQC_OSSL_INF_EID      18
+#define APQS_CERTVER_ERR_EID       19
+#define APQS_CERTVER_INF_EID       20
+#define APQS_PKI_INIT_TRUST_INF_EID 21
+#define APQS_PKI_INIT_TRUST_ERR_EID 22
+#define APQS_PKI_STORE_ERR_EID      23
+#define APQS_PKI_MSG_ERR_EID        24
+#define APQS_PKI_STORE_INF_EID      25
+#define APQS_PKI_MSG_INF_EID        26
+#define APQS_PKI_CSR_SENT_INF_EID   27
+#define APQS_PKI_CERT_SWAP_INF_EID  28
+#define APQS_PKI_RENEW_ERR_EID      29
+#define APQS_PKI_CERT_XCHG_INF_EID  30
+#define APQS_PKI_CERT_XCHG_ERR_EID  31
+#define APQS_PKI_CERT_SAT_SENT_INF_EID 32
+#define APQS_HS_SESSION_KEY_INF_EID    33

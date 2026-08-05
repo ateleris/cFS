@@ -1,0 +1,30 @@
+#
+# Exported symbol set for apqs_lib.so.
+#
+# This file is the module's API contract, enforced by the linker rather than by
+# convention. Everything not listed is local, which covers the APQS core, the
+# vendored CryptoLib / PQClean / nanopb, and OpenSSL - all of which arrive as
+# static archives and would otherwise be republished into the process-global
+# namespace, since cFE loads modules with RTLD_GLOBAL.
+#
+# Anonymous version tag: this controls visibility only, it does not attach
+# symbol version information.
+#
+# Adding a public entry point means adding it here. That is deliberate - the
+# wildcard covers the naming convention, and anything outside it should be a
+# conscious decision rather than an accident of default visibility.
+#
+{
+  global:
+    # cFE library entry point, resolved by ES via dlsym at load time
+    # (see cpu1_cfe_es_startup.scr).
+    lib_apqs_init;
+
+    # The cFS-facing API: apqs_cfs_api.h (SDLS, for ci_lab and to_lab) and
+    # apqs_cfs_pki.h (PKI and handshake lifecycle, for apqs_app). Applications
+    # resolve these out of this module at load time.
+    APQS_CFS_*;
+
+  local:
+    *;
+};

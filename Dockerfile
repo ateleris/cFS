@@ -18,19 +18,29 @@ RUN apt-get update && \
         wget && \
     rm -rf /var/lib/apt/lists/*
 
-# Build OpenSSL 3.6.1 from source (version pinned: must match the
-# find_package(OpenSSL 3.6.1 EXACT) requirement in the cFS build)
-# Manual build ensures proper installation with shared libraries
+# Build OpenSSL 3.6.3 from source. The version MUST match the
+# find_package(OpenSSL 3.6.3 EXACT) requirement in the cFS build
+# (libs/apqs_cfs_wrapper/apqs_lib, apps/apqs_app, libs/libossl_cfs_wrapper).
+#
+# A mismatch is not a build failure, which is what makes it easy to miss: the
+# EXACT lookup simply fails, libossl_cfs_wrapper falls back to FetchContent and
+# rebuilds OpenSSL from source into the build tree as a STATIC library. That
+# costs a full OpenSSL build on every clean configure, silently overrides
+# OPENSSL_USE_STATIC_LIBS=FALSE below, and links a private copy of libcrypto
+# into every module that uses it instead of sharing the one installed here.
+#
+# Built shared so modules get DT_NEEDED on libcrypto.so.3 and the process holds
+# a single copy of OpenSSL's global state (providers, error queue, RNG).
 WORKDIR /build
-RUN wget -q https://github.com/openssl/openssl/releases/download/openssl-3.6.1/openssl-3.6.1.tar.gz && \
-    tar xzf openssl-3.6.1.tar.gz && \
-    cd openssl-3.6.1 && \
+RUN wget -q https://github.com/openssl/openssl/releases/download/openssl-3.6.3/openssl-3.6.3.tar.gz && \
+    tar xzf openssl-3.6.3.tar.gz && \
+    cd openssl-3.6.3 && \
     ./Configure --prefix=/usr/local --libdir=lib --openssldir=/usr/local/ssl shared && \
     make -j$(nproc) && \
     make install && \
     ldconfig && \
     cd .. && \
-    rm -rf openssl-3.6.1 openssl-3.6.1.tar.gz
+    rm -rf openssl-3.6.3 openssl-3.6.3.tar.gz
 
 # Build liboqs against the custom OpenSSL
 RUN git clone --depth=1 https://github.com/open-quantum-safe/liboqs && \
@@ -54,7 +64,7 @@ WORKDIR /workspace/cFS
 COPY . .
 
 # Configure cFS with linux-gcc-debug preset
-# Point CMake to use manually-built OpenSSL 3.6.1
+# Point CMake to use manually-built OpenSSL 3.6.3
 ENV OPENSSL_ROOT_DIR=/usr/local
 RUN cmake --preset linux-gcc-debug \
     -DOPENSSL_ROOT_DIR=/usr/local \
@@ -77,7 +87,7 @@ RUN apt-get update && \
         ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy custom OpenSSL 3.6.1 libraries from deps stage
+# Copy custom OpenSSL 3.6.3 libraries from deps stage
 COPY --from=deps /usr/local/lib/libssl.so* /usr/local/lib/
 COPY --from=deps /usr/local/lib/libcrypto.so* /usr/local/lib/
 

@@ -24,7 +24,7 @@
     {
       "name": "linux-gcc-debug-board",
       "displayName": "Linux GCC Debug (FPGA board, local OpenSSL)",
-      "description": "Non-Docker build on the FPGA board against a hand-built OpenSSL 3.6.1 in /usr/local. OPENSSL_ROOT_DIR is set in the environment (not just as a cache var) so it propagates to the nested cFS arch sub-build.",
+      "description": "Non-Docker build on the FPGA board against a hand-built OpenSSL 3.6.3 in /usr/local (must be 3.6.3 exactly, or the APQS core falls back to building OpenSSL from source). OPENSSL_ROOT_DIR is set in the environment (not just as a cache var) so it propagates to the nested cFS arch sub-build.",
       "inherits": "linux-gcc-debug",
       "cacheVariables": {
         "OPENSSL_USE_STATIC_LIBS": "TRUE"

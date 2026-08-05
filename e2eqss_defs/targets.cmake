@@ -82,7 +82,18 @@ SET(SPACECRAFT_ID 0x42)
 #list(APPEND MISSION_CORE_MODULES mymodule)
 
 # add folder names where apps / libs are localted
-list(APPEND MISSION_GLOBAL_APPLIST libossl_cfs_wrapper pqclean_cfs_wrapper cf apqs_lib apqs_app)
+#
+# Order follows the dependency chain: cf exports the headers apqs_cfs_wrapper's
+# transport backend needs (cf_msgids.h and friends), and apqs_app depends on
+# both. add_cfe_app_dependency resolves include dirs through generator
+# expressions, so a forward reference would technically work, but keeping the
+# order honest means a missing dependency fails at configure rather than
+# surfacing later as a stray missing header.
+#
+# There is no longer an OpenSSL ordering constraint: apqs_cfs_wrapper is the only
+# module that links it, built privately into apqs_lib, with everything else
+# reaching it through the APQS API.
+list(APPEND MISSION_GLOBAL_APPLIST cf apqs_cfs_wrapper apqs_app)
 
 # The "MISSION_GLOBAL_STATIC_APPLIST" is similar to MISSION_GLOBAL_APPLIST
 # but the apps are statically linked.
