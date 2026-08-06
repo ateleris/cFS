@@ -5,11 +5,20 @@
 #include <apqs/pki_store.h>
 
 /*
+** The schema, for the one _Static_assert below and nothing else.
+**
+** Included directly because the APQS public headers no longer name protobuf types
+** and so no longer drag it in - which is the point of them. nanopb stays PRIVATE to
+** this module, so the wire format still cannot leak out to applications.
+*/
+#include <pki.pb.h>
+
+/*
 ** Forwarders onto the framework-free core, as in apqs_cfs_api.c. Thin by
 ** design: name translation only, and keeping the module's symbol surface
 ** self-contained.
 **
-** No protobuf here any more. The library decodes and encodes internally, so
+** No protobuf in the signatures. The library decodes and encodes internally, so
 ** this layer moves bytes and status codes and nothing else.
 */
 
@@ -38,7 +47,9 @@ apqs_status_t APQS_CFS_PkiEncodeStatus(uint32_t op, apqs_status_t status, uint8_
 
 apqs_status_t APQS_CFS_HandshakeSetSessionKey(void)
 {
-    return (apqs_handshake_set_session_key() == HANDSHAKE_SUCCESS) ? APQS_OK : APQS_ERR_STATE;
+    // Straight through: the core reports apqs_status_t now, so there is no
+    // HANDSHAKE_SUCCESS to translate from.
+    return apqs_handshake_set_session_key();
 }
 
 void APQS_CFS_HandshakeResetKeys(bool reset_session_key)

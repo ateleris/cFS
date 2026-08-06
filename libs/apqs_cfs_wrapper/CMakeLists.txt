@@ -38,13 +38,21 @@ target_sources(apqs_lib
 # types in its signatures, and apqs_cfs_pki.h re-exports the buffer sizes from
 # <apqs/sizes.h>, so both of those directories come along.
 #
+# The cryptolib entry stays listed explicitly even though the apqs target now
+# declares it PUBLIC itself. That covers this module's own compilation, but `apqs`
+# is linked PRIVATE below, so nothing it exports reaches applications - and
+# apqs_cfs_api.h names CryptoLib types, so applications need the directory too.
+#
 # That does put the rest of the core's headers within reach of applications,
 # which the previous arrangement avoided. It is an acceptable trade because
 # include-path hygiene was never the real boundary: exports.map is. A core
 # header can be included, but every symbol behind it is local to apqs_lib.so, so
 # reaching past apqs_cfs_*.h fails at link or load rather than working quietly.
-# <apqs/handshake.h> additionally will not compile downstream, since it needs the
-# protobuf schema that stays PRIVATE below.
+#
+# Every public APQS header now compiles standalone downstream. <apqs/handshake.h>
+# and <apqs/pki.h> used to need the protobuf schema that stays PRIVATE below, so
+# including either one from an application simply failed; the schema-typed
+# declarations moved to apqs_lib/src/*_internal.h.
 target_include_directories(apqs_lib PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/apqs_lib/include
